@@ -11,7 +11,6 @@ const formDiv = document.querySelector('#new-book-form')
 let formButtonPressed = false
 
 
-
 // Functions
 
   // Pass the book object to the library array
