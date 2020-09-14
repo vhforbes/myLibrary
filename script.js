@@ -13,6 +13,14 @@ let formButtonPressed = false
 
 // Functions
 
+  // New Book Validation
+
+function validateForm(name, author, pages, read) {
+  if (name && author && pages && read) {
+    return true
+  } else return false
+}
+
   // Pass the book object to the library array
 function addBookToLibrary(...bookObject) {
   if (typeof bookObject == 'object') {
@@ -22,13 +30,65 @@ function addBookToLibrary(...bookObject) {
 
   // Book constructor
 
-function Book(name, author, pages, read) {
-  this.id = myLibrary.length
+function Book(id, name, author, pages, read) {
+  this.id = id
   this.name = name
   this.author = author
   this.pages = pages
   this.read = read
 }
+
+
+
+  // Read Status Prototype
+
+Book.prototype.changeRead = parentDiv => {
+  let changeReadButton = document.createElement('input')
+  changeReadButton.type = 'button'
+  changeReadButton.value = 'Change Read Status'
+  parentDiv.appendChild(changeReadButton)
+  
+  changeReadButton.addEventListener('click', () => {
+    let parent = changeReadButton.parentElement
+
+    let id = parent.id
+
+    let trueOrFalse = (id) => {
+      let read = false
+      myLibrary.forEach(Object => {
+        if (Object.id == id) {
+          for (const key in Object) {
+            if (key == 'read') {
+              if (Object.read) {
+                read = false
+              } else read = true
+            }
+          }
+        }
+      })
+      return read
+    }
+
+
+    changeKeyByID(id, 'read', trueOrFalse(id))
+    printBooks(myLibrary)
+  })
+}
+
+  // Change Key value in object 
+
+function changeKeyByID(objectID, theKey, value) {
+  myLibrary.forEach(Object => {
+    if (Object.id == objectID) {
+      for (const key in Object) {    
+        if (key == theKey) {
+          Object[key] = value;
+        } 
+      }
+    }
+  })
+}
+
 
   // Loop the array and print books on the screen 
     // Access each object of the array
@@ -43,56 +103,82 @@ function printBooks(myLibrary) {
   while (libraryDiv.hasChildNodes()) {
     libraryDiv.removeChild(libraryDiv.firstChild)
   }
-  myLibrary.forEach(Object => {
-    let bookDiv = document.createElement('div') // Creates a div for each book object
-    let removeBook = document.createElement('input')
-    removeBook.type = 'button'
-    removeBook.value = 'remove book'
-    removeBook.className = 'remove-book'
 
-    removeBook.addEventListener('click', () => {
-      
-    })
+  myLibrary.forEach(Object => {
+
+    let bookDiv = document.createElement('div') // Creates a div for each book object
 
     // Puts each object property on the div created
-    for (const property in Object) {
-        if (property == 'id') { // Hides the ID
-        } else {
 
+    for (const property in Object) {
+
+        if (property == 'id') { // Hides the ID
+          bookDiv.id = Object['id']
+
+        } else if (property == 'changeRead') { // Hides the prototype
+
+        } else {
           let bookInfo = document.createTextNode(Object[property] + ' ')
           bookDiv.appendChild(bookInfo)
-          bookDiv.appendChild(removeBook)
           libraryDiv.appendChild(bookDiv)
-        }   
+        }    
+        
     }
+    Object.changeRead(bookDiv)
+    bookDiv.appendChild(removeButton(Object['id']))  
   });
 }
 
-// Button that removes the book
+// Function that remove book from DOM and from Array
 
-function removeBook() {
-  let removeBook = document.createElement('button') 
+function removeButton(objectId) {
+  let removeBook = document.createElement('input')
+  removeBook.type = 'button'
+  removeBook.value = 'remove book'
+  removeBook.className = 'remove-book'
+  removeBook.id = objectId
 
-}
+  removeBook.addEventListener('click', () => {
+    let toRemove = removeBook.parentElement
+    toRemove.remove()
+    myLibrary.splice(removeBook.id, 1)
+  
+  })
+  return removeBook
+  }
 
-  // Show an form to input a new book
-    // Name // Author // Pages // Read Bool
+  
+
+  // Show the form to input a new book
+    
+
 
 newBook.addEventListener('click', () => {
   if (!formButtonPressed) {
-    // Show the form
-    newBookForm();
-    // Add new book to array and show i
-
     formButtonPressed = true
+    newBookForm(); 
   } else {
-
   }
 })
+
+  // Hide the form after new book is inputed
+
+let addButtonPressed = false
+
+// Quando apertar o add for true eu quero remover o form
+
+function hideForm() {
+  let removeDiv = document.querySelector('#the-div')
+  removeDiv.remove()
+  formButtonPressed = false
+}
 
 
 // Form that pops up and you can add a new book
 function newBookForm() {
+
+  let theDiv = document.createElement('div')
+  theDiv.id = 'the-div'
 
   // Name text input
   let name = document.createElement('input')
@@ -131,12 +217,6 @@ function newBookForm() {
         let readNoLabel = document.createElement('label')
         readNoLabel.textContent = 'No'
 
-      let alreadyRead = (readYes) => {
-        if (readYes.checked) {
-          return true
-        } else return false
-      }
-
     // Add book button
     let addNewBook = document.createElement('input')
     addNewBook.type = 'button'
@@ -146,23 +226,44 @@ function newBookForm() {
       radioDivYes.appendChild(readYesLabel)
       radioDivNo.appendChild(readNo)
       radioDivNo.appendChild(readNoLabel)
-    
-  formDiv.appendChild(name)
-  formDiv.appendChild(author)
-  formDiv.appendChild(pages)
-  formDiv.appendChild(radioDivYes)
-  formDiv.appendChild(radioDivNo)
-  formDiv.appendChild(addNewBook)
+  
+  theDiv.appendChild(name)
+  theDiv.appendChild(author)
+  theDiv.appendChild(pages)
+  theDiv.appendChild(radioDivYes)
+  theDiv.appendChild(radioDivNo)
+  theDiv.appendChild(addNewBook)
+
+  formDiv.appendChild(theDiv)
 
   
   let newUserBook = {}
+
   addNewBook.addEventListener('click', () => {
-    newUserBook = new Book(name.value, author.value, pages.value, alreadyRead(readYes))
-    addBookToLibrary(newUserBook);
-    printBooks(myLibrary)
-    console.log(newUserBook)
+    if (validateForm(name.value, author.value, pages.value, typeof alreadyRead(readYes) == 'boolean')) {
+      newUserBook = new Book(myLibrary.length, name.value, author.value, pages.value, alreadyRead(readYes))
+      addBookToLibrary(newUserBook);
+      printBooks(myLibrary)
+      hideForm()
+      
+    } else {
+      alert('Error')
+    }
+    
+
   })
 
+}
+
+// Hide the form after clicking ADD
+
+
+// Return a boolean from the form
+
+function alreadyRead(readYes) {
+  if (readYes.checked) {
+    return true
+  } else return false
 }
 
 
